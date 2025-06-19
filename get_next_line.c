@@ -1,11 +1,14 @@
-//#include "get_next_line.h"
+// #include "get_next_line.h"
 #include <stdio.h>
 # include <stdlib.h>
 # include <unistd.h>
 # include <stdio.h>
 # include <fcntl.h>
-# define BUFFER_SIZE 5
 
+
+# ifndef BUFFER_SIZE
+# define BUFFER_SIZE 20
+# endif
 
 size_t	ft_strlen(const char *c)
 {
@@ -41,8 +44,6 @@ char	*ft_strdup(const char *s)
 	s_dup[i] = '\0';
 	return (s_dup);
 }
-
-
 char	*ft_substr(char const *s, unsigned int start, size_t len)
 {
 	char	*sub;
@@ -90,51 +91,65 @@ char	*ft_strjoin(const char *s1, const char *s2)
 	return (strjoin);
 }
 
-int one_string(int fd)
-{
-	char	*string;
-	char	*storage;
-	char	buffer[BUFFER_SIZE + 1];
-	ssize_t		read_char;
-	ssize_t		i = 0;
-	ssize_t		j = 0;
 
-	storage = malloc(1);
-	if (!storage)
-		return (-1);
-	storage[0] = '\0';
+
+char	*get_next_line(int fd)
+{
+
+	char	buffer[BUFFER_SIZE + 1];
+	ssize_t char_read;
+	ssize_t i = 0;
+	char	*string;
+	char	*line;
+	static char	*storage;
 	
-	while ((read_char = read(fd, buffer, BUFFER_SIZE))> 0)
+	
+	line = malloc(1);
+	if(!storage)
+		{
+			storage = malloc(1);
+			storage[0] = '\0';
+		}
+	line[0] = '\0';
+
+	char_read = read(fd, buffer, BUFFER_SIZE);
+	if (char_read <= 0)
+		return (NULL);
+	while (char_read) 
 	{
-		if (read_char < 0)
-			return (-1);
-		buffer[read_char] = '\0';
-		string = ft_strdup(buffer);
-		char *temp = storage;
-		storage = ft_strjoin(storage, string);
+		buffer[char_read] = '\0';
+		storage = ft_strjoin(storage, buffer);
 		while(storage[i])
 		{
-			if (storage[i] == '\n')
-				{
-					string = ft_substr(storage, j, i-j+1);
-					j = i + 1;
-					printf("\n =>%s\n", string);
-					free(string);
-				}
+			
+			if(storage[i] == '.')
+			{
+				line = ft_substr(storage, 0, i+1);
+				break;
+			}
 			i++;
 		}
-		free(string);
-		free(temp);
+		char_read = read(fd, buffer, BUFFER_SIZE);
 	}
-	
-	free(storage);
-	return 0;
+
+	return line;
 }
+
+
+
 int main()
 {
 	int fd = open("text.txt", O_RDONLY);
 	if (fd == -1)
-		return -1;
-	one_string(fd);
+		return (-1);
+	char	*line = get_next_line(fd);
+
+	while (line)
+	{
+		printf("%s\n =>\n", line);
+	
+		free(line);
+		line = get_next_line(fd);
+	}
 	return 0;
 }
