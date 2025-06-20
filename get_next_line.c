@@ -7,7 +7,7 @@
 
 
 # ifndef BUFFER_SIZE
-# define BUFFER_SIZE 20
+# define BUFFER_SIZE 3
 # endif
 
 size_t	ft_strlen(const char *c)
@@ -91,6 +91,21 @@ char	*ft_strjoin(const char *s1, const char *s2)
 	return (strjoin);
 }
 
+char	*ft_strchr(const char *str, int c)
+{
+	int	i;
+
+	i = 0;
+	while (str[i] != '\0')
+	{
+		if (str[i] == (char)c)
+			return ((char *)(str + i + 1));
+		i++;
+	}
+	if ((char)c == '\0')
+		return ((char *)(str + i));
+	return (NULL);
+}
 
 
 char	*get_next_line(int fd)
@@ -98,41 +113,48 @@ char	*get_next_line(int fd)
 
 	char	buffer[BUFFER_SIZE + 1];
 	ssize_t char_read;
-	ssize_t i = 0;
-	char	*string;
+	ssize_t i;
 	char	*line;
 	static char	*storage;
 	
-	
-	line = malloc(1);
 	if(!storage)
 		{
 			storage = malloc(1);
 			storage[0] = '\0';
 		}
-	line[0] = '\0';
 
-	char_read = read(fd, buffer, BUFFER_SIZE);
-	if (char_read <= 0)
-		return (NULL);
-	while (char_read) 
+	while ((char_read = read(fd, buffer, BUFFER_SIZE)) > 0)
 	{
 		buffer[char_read] = '\0';
-		storage = ft_strjoin(storage, buffer);
-		while(storage[i])
+		char *temp = ft_strjoin(storage, buffer);
+		if (!temp)
+			return NULL;
+		free(storage);
+		storage = temp;
+		i = 0;
+		while (storage[i])
 		{
-			
-			if(storage[i] == '.')
+			if(storage[i] == '.')	
 			{
 				line = ft_substr(storage, 0, i+1);
-				break;
+				char *rest = ft_substr(storage, i + 1, ft_strlen(storage) - i - 1);
+				free(storage);
+				storage = rest;
+				return (line);
 			}
 			i++;
 		}
-		char_read = read(fd, buffer, BUFFER_SIZE);
 	}
-
-	return line;
+	if (storage && *storage)
+	{
+		line = ft_substr(storage, 0, ft_strlen(storage));
+		free(storage);
+		storage = NULL;
+		return (line);
+	}
+	free(storage);
+	storage = NULL;
+	return NULL;
 }
 
 
@@ -143,11 +165,9 @@ int main()
 	if (fd == -1)
 		return (-1);
 	char	*line = get_next_line(fd);
-
 	while (line)
 	{
-		printf("%s\n =>\n", line);
-	
+		printf("\n => %s\n", line);
 		free(line);
 		line = get_next_line(fd);
 	}

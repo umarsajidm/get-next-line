@@ -6,7 +6,7 @@
 /*   By: musajid <musajid@hive.student.fi>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/10 14:56:33 by musajid           #+#    #+#             */
-/*   Updated: 2025/06/19 20:09:54 by musajid          ###   ########.fr       */
+/*   Updated: 2025/06/20 20:52:53 by musajid          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,4 +92,20 @@ char	*ft_strjoin(const char *s1, const char *s2)
 		strjoin[i++] = s2[j++];
 	strjoin[i] = '\0';
 	return (strjoin);
+}
+
+char	*ft_strchr(const char *str, int c)
+{
+	int	i;
+
+	i = 0;
+	while (str[i] != '\0')
+	{
+		if (str[i] == (char)c)
+			return ((char *)(str + i));
+		i++;
+	}
+	if ((char)c == '\0')
+		return ((char *)(str + i));
+	return (NULL);
 }
